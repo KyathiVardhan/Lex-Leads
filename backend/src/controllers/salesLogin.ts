@@ -17,10 +17,6 @@ interface JwtPayload {
     role: string;
 }
 
-interface AuthenticatedRequest extends Request {
-    userInfo?: JwtPayload;
-}
-
 const salesLogin = async (req: Request<{}, {}, LoginRequest>, res: Response): Promise<void> => {
     try {
         console.log("Sales login attempt:", { email: req.body.email });

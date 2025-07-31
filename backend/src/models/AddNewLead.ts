@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IAddNewLead extends Document {
-    type_of_lead: 'lead' | 'speaker' | 'sponsor' | 'awards' | 'other';
+    type_of_lead: string;
     project_name: string;
     name_of_lead: string;
     designation_of_lead: string;
@@ -20,8 +20,9 @@ const addNewLeadSchema = new Schema<IAddNewLead>({
     type_of_lead: {
         type: String,
         required: true,
-        default: 'lead',
-        enum: ['lead', 'speaker', 'sponsor', 'awards', 'other']
+        trim: true,
+        minlength: 2,
+        maxlength: 50
     },
     project_name: {
         type: String,

@@ -14,6 +14,7 @@ import API from "../api/axios";
 
 interface FormData {
   type_of_lead: "lead" | "speaker" | "sponsor" | "awards" | "other" | "";
+  custom_type: string;
   project_name: string;
   name_of_lead: string;
   designation_of_lead: string;
@@ -30,6 +31,7 @@ const AddLeadForm: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<FormData>({
     type_of_lead: "",
+    custom_type: "",
     project_name: "",
     name_of_lead: "",
     designation_of_lead: "",
@@ -40,12 +42,13 @@ const AddLeadForm: React.FC = () => {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [customLeadTypes, setCustomLeadTypes] = useState<string[]>([]);
 
   const handleBackToDashboard = () => {
     navigate("/sales/dashboard");
   };
 
-  // Check authentication on component mount
+  // Check authentication on component mount and fetch custom lead types
   useEffect(() => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
@@ -54,37 +57,56 @@ const AddLeadForm: React.FC = () => {
       navigate("/");
       return;
     }
+
+    // Fetch custom lead types
+    const fetchCustomLeadTypes = async () => {
+      try {
+        const response = await API.get('/sales/custom-lead-types');
+        if (response.data.success) {
+          setCustomLeadTypes(response.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching custom lead types:', error);
+      }
+    };
+
+    fetchCustomLeadTypes();
   }, [navigate]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Type of lead validation
+    //Fileds Validations
+    
     if (!formData.type_of_lead) {
       newErrors.type_of_lead = "Please select a type of lead";
     }
 
-    // Project name validation
+    
+    if (formData.type_of_lead === "other" && !formData.custom_type.trim()) {
+      newErrors.custom_type = "Please enter a custom lead type";
+    }
+
+    
     if (!formData.project_name.trim()) {
       newErrors.project_name = "Project name is required";
     }
 
-    // Name validation
+    
     if (!formData.name_of_lead.trim()) {
       newErrors.name_of_lead = "Lead name is required";
     }
 
-    // Designation validation
+    
     if (!formData.designation_of_lead.trim()) {
       newErrors.designation_of_lead = "Designation is required";
     }
 
-    // Company name validation
+    
     if (!formData.company_name.trim()) {
       newErrors.company_name = "Company name is required";
     }
 
-    // Phone number validation (exactly 10 digits)
     const phoneRegex = /^\d{10}$/;
     if (!formData.phone_number_of_lead) {
       newErrors.phone_number_of_lead = "Phone number is required";
@@ -92,7 +114,7 @@ const AddLeadForm: React.FC = () => {
       newErrors.phone_number_of_lead = "Phone number must be exactly 10 digits";
     }
 
-    // Email validation (must end with .com)
+    
     const emailRegex = /^[^\s@]+@[^\s@]+\.com$/;
     if (!formData.email_of_lead) {
       newErrors.email_of_lead = "Email is required";
@@ -134,13 +156,14 @@ const AddLeadForm: React.FC = () => {
       // Prepare the data to send
       const requestData = {
         type_of_lead: formData.type_of_lead,
+        custom_type: formData.custom_type,
         project_name: formData.project_name,
         name_of_lead: formData.name_of_lead,
         designation_of_lead: formData.designation_of_lead,
         company_name: formData.company_name,
         phone_number_of_lead: formData.phone_number_of_lead,
         email_of_lead: formData.email_of_lead,
-        intrested: 'COLD', // Default value as per model
+        intrested: 'WARM', // Default value as per model
         follow_up_conversation: '', // Default empty string
         status: 'Open' // Default status
       };
@@ -156,6 +179,7 @@ const AddLeadForm: React.FC = () => {
       // Reset form
       setFormData({
         type_of_lead: "",
+        custom_type: "",
         project_name: "",
         name_of_lead: "",
         designation_of_lead: "",
@@ -245,6 +269,9 @@ const AddLeadForm: React.FC = () => {
                   <option value="sponsor">Sponsor</option>
                   <option value="awards">Awards</option>
                   <option value="other">Other</option>
+                  {customLeadTypes.map((customType, index) => (
+                    <option key={index} value={customType}>{customType}</option>
+                  ))}
                 </select>
                 {errors.type_of_lead && (
                   <p className="mt-1 text-sm text-red-600">
@@ -252,6 +279,33 @@ const AddLeadForm: React.FC = () => {
                   </p>
                 )}
               </div>
+
+              {/* Custom Type Input - Only show when "other" is selected */}
+              {formData.type_of_lead === "other" && (
+                <div className="lg:col-span-2">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <Award className="w-4 h-4 text-blue-600" />
+                    Custom Lead Type
+                  </label>
+                  <input
+                    type="text"
+                    name="custom_type"
+                    value={formData.custom_type}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border-2 rounded-lg transition-all duration-200 ${
+                      errors.custom_type
+                        ? "border-red-500 focus:border-red-500"
+                        : "border-gray-300 focus:border-blue-600 hover:border-gray-400"
+                    } focus:outline-none focus:ring-2 focus:ring-blue-100`}
+                    placeholder="Enter custom lead type"
+                  />
+                  {errors.custom_type && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.custom_type}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Project Name */}
               <div>

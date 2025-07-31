@@ -4,7 +4,7 @@ import API from '../api/axios';
 
 interface LeadData {
   _id: string;
-  type_of_lead: 'lead' | 'speaker' | 'sponsor' | 'awards' | 'other';
+  type_of_lead: string;
   project_name: string;
   name_of_lead: string;
   designation_of_lead: string;
@@ -30,6 +30,7 @@ const EditLeadModal: React.FC<EditLeadModalProps> = ({ isOpen, onClose, lead, on
   const [formData, setFormData] = useState<Partial<LeadData>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [customLeadTypes, setCustomLeadTypes] = useState<string[]>([]);
 
   useEffect(() => {
     if (lead) {
@@ -48,6 +49,24 @@ const EditLeadModal: React.FC<EditLeadModalProps> = ({ isOpen, onClose, lead, on
       setErrors({});
     }
   }, [lead]);
+
+  // Fetch custom lead types when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const fetchCustomLeadTypes = async () => {
+        try {
+          const response = await API.get('/sales/custom-lead-types');
+          if (response.data.success) {
+            setCustomLeadTypes(response.data.data);
+          }
+        } catch (error) {
+          console.error('Error fetching custom lead types:', error);
+        }
+      };
+
+      fetchCustomLeadTypes();
+    }
+  }, [isOpen]);
 
   const handleInputChange = (field: keyof LeadData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -144,6 +163,9 @@ const EditLeadModal: React.FC<EditLeadModalProps> = ({ isOpen, onClose, lead, on
                 <option value="sponsor">Sponsor</option>
                 <option value="awards">Awards</option>
                 <option value="other">Other</option>
+                {customLeadTypes.map((customType, index) => (
+                  <option key={index} value={customType}>{customType}</option>
+                ))}
               </select>
               {errors.type_of_lead && (
                 <p className="text-red-500 text-sm mt-1">{errors.type_of_lead}</p>

@@ -5,6 +5,7 @@ import SalesAuthMiddleware from "../middleware/sales-auth-middleware";
 import SalesUser from "../models/SalesUser";
 import bcrypt from "bcryptjs";
 
+
 interface AuthenticatedRequest extends Request {
     userInfo?: {
         userName: string;
@@ -29,6 +30,8 @@ router.get("/welcome-sales", SalesAuthMiddleware, (req: AuthenticatedRequest, re
         user: req.userInfo
     });
 });
+
+
 
 router.post("/add-sales", AdminAuthMiddleware, isAdminUser, async (req: Request<{}, {}, AddSalesRequest>, res: Response) => {
     try {

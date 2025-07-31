@@ -1,12 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
-import { Users, LogOut, User, Settings, BarChart3, Target, TrendingUp, Plus, MessageSquare, CheckCircle, Clock } from 'lucide-react';
-
-interface SalesUser {
-  userName: string;
-  role: string;
-}
+import { jwtDecode } from 'jwt-decode';
+import { Users, LogOut, User, Settings, Target, Plus, MessageSquare, CheckCircle, Clock, TrendingUp, BarChart3 } from 'lucide-react';
 
 // Activity interface to track different types of activities
 interface Activity {
@@ -25,10 +21,22 @@ interface Activity {
   };
 }
 
+interface Statistics {
+  totalLeads: number;
+  convertedLeads: number;
+  conversionRate: number;
+  leadsThisMonth: number;
+}
+
 export default function SalesDashboard() {
-  const [user, setUser] = useState<SalesUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [statistics, setStatistics] = useState<Statistics>({
+    totalLeads: 0,
+    convertedLeads: 0,
+    conversionRate: 0,
+    leadsThisMonth: 0
+  });
+  const [userName, setUserName] = useState<string>('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,41 +44,29 @@ export default function SalesDashboard() {
       const token = localStorage.getItem('token');
       const role = localStorage.getItem('role');
 
-      console.log('SalesDashboard auth check:', { token: !!token, role });
-
       if (!token || role !== 'sales') {
-        console.log('Auth failed - redirecting to login');
         navigate('/');
         return;
       }
 
       try {
-        console.log('Verifying token with backend...');
-        // Verify token with backend
-        const response = await API.get('/login-sales/welcome-sales', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        console.log('Token verification successful:', response.data);
-        setUser(response.data.user);
+        // Decode JWT token to get user information
+        const decoded = jwtDecode(token) as { userId: string; userName: string; role: string };
+        setUserName(decoded.userName);
         
-        // Fetch recent activities
         await fetchRecentActivities();
       } catch (error) {
-        console.error('Authentication failed:', error);
-        console.log('Removing auth data and redirecting to login');
+        console.error('Error fetching activities:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('role');
         navigate('/');
-      } finally {
-        setIsLoading(false);
       }
     };
 
     checkAuth();
   }, [navigate]);
+
+
 
   // Function to fetch recent activities
   const fetchRecentActivities = async () => {
@@ -132,48 +128,30 @@ export default function SalesDashboard() {
       // Sort activities by timestamp (most recent first)
       activityData.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       
-      // Take only the 5 most recent activities
-      setActivities(activityData.slice(0, 5));
+      // Take only the 10 most recent activities
+      setActivities(activityData.slice(0, 10));
+
+      // Calculate statistics
+      const totalLeads = leads.length;
+      const convertedLeads = leads.filter((lead: any) => lead.status === 'Close').length;
+      const conversionRate = totalLeads > 0 ? Math.round((convertedLeads / totalLeads) * 100) : 0;
+      
+      // Calculate leads this month
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const leadsThisMonth = leads.filter((lead: any) => 
+        new Date(lead.created_at) >= startOfMonth
+      ).length;
+
+      setStatistics({
+        totalLeads,
+        convertedLeads,
+        conversionRate,
+        leadsThisMonth
+      });
     } catch (error) {
       console.error('Error fetching activities:', error);
-      // Fallback to sample data if API fails
-      setActivities([
-        {
-          id: '1',
-          type: 'lead_created',
-          leadName: 'John Smith',
-          leadEmail: 'john.smith@techcorp.com',
-          description: 'New lead added',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-          details: {
-            projectName: 'Tech Conference 2024',
-            companyName: 'TechCorp Solutions'
-          }
-        },
-        {
-          id: '2',
-          type: 'follow_up_updated',
-          leadName: 'Sarah Johnson',
-          leadEmail: 'sarah.johnson@innovateai.com',
-          description: 'Follow-up conversation updated',
-          timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
-          details: {
-            followUpText: 'Discussed pricing options and timeline. Client showed strong interest in premium package.'
-          }
-        },
-        {
-          id: '3',
-          type: 'status_changed',
-          leadName: 'Mike Wilson',
-          leadEmail: 'mike.wilson@startup.com',
-          description: 'Lead status changed to Closed',
-          timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
-          details: {
-            oldValue: 'Open',
-            newValue: 'Close'
-          }
-        }
-      ]);
+      
     }
   };
 
@@ -235,14 +213,6 @@ export default function SalesDashboard() {
     return text.substring(0, maxLength) + '...';
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-gray-900 text-xl">Loading...</div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -255,7 +225,9 @@ export default function SalesDashboard() {
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Sales Dashboard</h1>
-                <p className="text-blue-600 text-sm sm:text-base">Welcome back, {user?.userName}!</p>
+                <p className="text-blue-600 text-sm sm:text-base">
+                  Welcome back, {userName || 'Sales Person'}!
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -273,16 +245,18 @@ export default function SalesDashboard() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        {/* Stats Cards */}
+
+
+        {/* Statistics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-600 text-xs sm:text-sm font-medium">Total Leads</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">1,234</p>
+                <p className="text-amber-600 text-xs sm:text-sm font-medium">Total Leads</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{statistics.totalLeads}</p>
               </div>
-              <div className="bg-blue-600 p-2 sm:p-3 rounded-lg">
-                <Target className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              <div className="bg-amber-600 p-2 sm:p-3 rounded-lg">
+                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
             </div>
           </div>
@@ -290,8 +264,8 @@ export default function SalesDashboard() {
           <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-emerald-600 text-xs sm:text-sm font-medium">Converted</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">456</p>
+                <p className="text-emerald-600 text-xs sm:text-sm font-medium">Converted Leads</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{statistics.convertedLeads}</p>
               </div>
               <div className="bg-emerald-500 p-2 sm:p-3 rounded-lg">
                 <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -303,7 +277,7 @@ export default function SalesDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-indigo-600 text-xs sm:text-sm font-medium">Conversion Rate</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">37%</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{statistics.conversionRate}%</p>
               </div>
               <div className="bg-indigo-500 p-2 sm:p-3 rounded-lg">
                 <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -314,10 +288,10 @@ export default function SalesDashboard() {
           <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-amber-600 text-xs sm:text-sm font-medium">This Month</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">89</p>
+                <p className="text-blue-600 text-xs sm:text-sm font-medium">This Month</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{statistics.leadsThisMonth}</p>
               </div>
-              <div className="bg-amber-500 p-2 sm:p-3 rounded-lg">
+              <div className="bg-blue-500 p-2 sm:p-3 rounded-lg">
                 <User className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
             </div>
@@ -329,7 +303,7 @@ export default function SalesDashboard() {
           {/* Recent Activity */}
           <div className="lg:col-span-2 bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-lg">
             <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
-            <div className="space-y-3 sm:space-y-4">
+            <div className="h-96 overflow-y-auto pr-2 space-y-3 sm:space-y-4">
               {activities.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />

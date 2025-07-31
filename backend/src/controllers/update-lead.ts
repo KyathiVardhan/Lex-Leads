@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import AddNewLead from "../models/AddNewLead";
+import mongoose from "mongoose";
 
 interface AuthenticatedRequest extends Request {
     userInfo?: {
@@ -45,10 +46,13 @@ const updateLead = async (req: AuthenticatedRequest, res: Response) => {
             return;
         }
 
+        // Convert string userId to ObjectId for database query
+        const userObjectId = new mongoose.Types.ObjectId(currentUserId);
+
         // Find the lead and check if it exists and belongs to the current user
         const existingLead = await AddNewLead.findOne({ 
             _id: leadId, 
-            created_by: currentUserId 
+            created_by: userObjectId 
         });
 
         if (!existingLead) {
