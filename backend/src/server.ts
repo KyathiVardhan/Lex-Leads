@@ -1,0 +1,31 @@
+import express from "express";
+import cors from "cors";
+import connectDB from "./database/db";
+import authRoutes from "./routes/admin-auth-route";
+import adminRoutes from "./routes/admin-routes";
+import addSalesRoutes from "./routes/add-sales-routes"; 
+import salesAuthRoutes from "./routes/sales-auth-route";
+import dotenv from "dotenv";
+import addLeadsToSales from "./routes/add-leads-to-sales-route";
+
+dotenv.config();
+
+const app = express();
+
+app.use(express.json());
+app.use(cors());
+
+//routes
+app.use("/api/auth", authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/admin', addSalesRoutes); // add sales routes
+app.use('/api/login-sales', salesAuthRoutes);
+app.use('/api/sales', addLeadsToSales);
+
+const PORT = process.env.PORT || 3001;
+
+connectDB();
+
+app.listen(PORT, () => {
+    console.log(`server is running on port ${PORT}`);
+}); 
