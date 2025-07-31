@@ -233,7 +233,7 @@ export default function SalesDashboard() {
             <div className="flex items-center space-x-4">
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-3 sm:px-4 py-2 rounded-lg transition-colors duration-200 text-sm sm:text-base"
+                className="flex items-center space-x-2 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-4 sm:px-5 py-2 rounded-xl transition-all duration-200 text-sm sm:text-base shadow-md hover:shadow-lg font-medium"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Logout</span>
@@ -367,10 +367,10 @@ export default function SalesDashboard() {
                 <Target className="w-4 h-4" />
                 <span>View Reports</span>
               </button>
-              <button className="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base">
+              {/* <button className="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base">
                 <Settings className="w-4 h-4" />
                 <span>Settings</span>
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

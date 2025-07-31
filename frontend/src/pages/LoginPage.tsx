@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import API from '../api/axios'; // adjust path based on your structure
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, User, Lock, Users, Shield } from 'lucide-react';
+import { Eye, EyeOff, User, Lock, LockOpen, Users, Shield } from 'lucide-react';
 
 interface FormData {
   email: string;
@@ -204,45 +204,64 @@ const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
       {/* Login Card */}
       <div className={getCardClasses()}>
         <div className="text-center mb-6 sm:mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full mb-3 sm:mb-4 shadow-lg">
+          <div className={`inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full mb-3 sm:mb-4 shadow-lg transition-all duration-500 ease-in-out ${
+            formData.role === 'admin' ? 'bg-amber-50' : 'bg-blue-50'
+          }`}>
             <User
-              className={`w-6 h-6 sm:w-8 sm:h-8 ${
+              className={`w-6 h-6 sm:w-8 sm:h-8 transition-all duration-500 ease-in-out ${
                 formData.role === 'admin'
-                  ? 'text-orange-400'
-                  : 'text-blue-400'
+                  ? 'text-amber-600'
+                  : 'text-blue-600'
               }`}
             />
           </div>
-          <h1 className={`text-2xl sm:text-3xl md:text-4xl font-bold ${getTextColor()} tracking-wide mb-2`}>Welcome Back</h1>
-          <p className={`${getSubTextColor()} text-sm sm:text-base`}>Sign in to your account</p>
+          <h1 className={`text-2xl sm:text-3xl md:text-4xl font-bold ${getTextColor()} tracking-wide mb-2 transition-all duration-500 ease-in-out`}>
+            Welcome Back
+          </h1>
+          <p className={`${getSubTextColor()} text-sm sm:text-base transition-all duration-500 ease-in-out`}>
+            Sign in to your {formData.role === 'admin' ? 'admin' : 'sales'} account
+          </p>
         </div>
 
         {/* Role Switch */}
         <div className="mb-4 sm:mb-6">
-          <div className="flex bg-white/10 rounded-lg p-1 backdrop-blur-sm">
+          <div className="relative flex bg-white/10 rounded-lg p-1 backdrop-blur-sm overflow-hidden">
+            {/* Animated background slider */}
+            <div 
+              className={`absolute top-1 bottom-1 rounded-md transition-all duration-500 ease-in-out ${
+                formData.role === 'sales' 
+                  ? 'left-1 w-[calc(50%-0.125rem)] bg-blue-600 shadow-lg' 
+                  : 'left-[calc(50%+0.125rem)] w-[calc(50%-0.125rem)] bg-amber-600 shadow-lg'
+              }`}
+            />
+            
             <button
               type="button"
               onClick={() => handleRoleChange('sales')}
-              className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2 px-2 sm:px-4 rounded-md transition-all duration-200 text-sm sm:text-base ${
+              className={`relative flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2 px-2 sm:px-4 rounded-md transition-all duration-300 ease-in-out text-sm sm:text-base font-medium ${
                 formData.role === 'sales'
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'text-black hover:text-black hover:bg-gray-100'
+                  ? 'text-white transform scale-105'
+                  : 'text-gray-700 hover:text-gray-900 hover:bg-white/20'
               }`}
             >
-              <Users className="w-3 h-3 sm:w-4 sm:h-4" />
-              Sales
+              <Users className={`w-3 h-3 sm:w-4 sm:h-4 transition-all duration-300 ${
+                formData.role === 'sales' ? 'transform scale-110' : ''
+              }`} />
+              <span className="transition-all duration-300">Sales</span>
             </button>
             <button
               type="button"
               onClick={() => handleRoleChange('admin')}
-              className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2 px-2 sm:px-4 rounded-md transition-all duration-200 text-sm sm:text-base ${
+              className={`relative flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2 px-2 sm:px-4 rounded-md transition-all duration-300 ease-in-out text-sm sm:text-base font-medium ${
                 formData.role === 'admin'
-                  ? 'bg-amber-600 text-white shadow-lg'
-                  : 'text-black hover:text-black hover:bg-gray-100'
+                  ? 'text-white transform scale-105'
+                  : 'text-gray-700 hover:text-gray-900 hover:bg-white/20'
               }`}
             >
-              <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
-              Admin
+              <Shield className={`w-3 h-3 sm:w-4 sm:h-4 transition-all duration-300 ${
+                formData.role === 'admin' ? 'transform scale-110' : ''
+              }`} />
+              <span className="transition-all duration-300">Admin</span>
             </button>
           </div>
         </div>
@@ -311,19 +330,44 @@ const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
             type="button"
             onClick={handleSubmit}
             disabled={isLoading}
-            className={`w-full py-2 sm:py-3 px-4 rounded-lg font-medium text-white transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none bg-gradient-to-r text-sm sm:text-base ${getButtonGradient()}`}
+            className={`w-full py-2 sm:py-3 px-4 rounded-lg font-medium text-white transition-all duration-500 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none bg-gradient-to-r text-sm sm:text-base ${getButtonGradient()}`}
           >
             {isLoading ? (
               <div className="flex items-center justify-center gap-1 sm:gap-2">
                 <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 Signing in...
               </div>
-            ) : (
-              <div className="flex items-center justify-center gap-1 sm:gap-2">
-                <Lock className="w-4 h-4 sm:w-5 sm:h-5" />
-                Sign In as {formData.role === 'admin' ? 'Admin' : 'Sales'}
-              </div>
-            )}
+                         ) : (
+               <div className="flex items-center justify-center gap-1 sm:gap-2">
+                 <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+                   {/* Lock Open Icon for Sales - More Accessible */}
+                   <LockOpen 
+                     className={`absolute inset-0 transition-all duration-700 ease-in-out ${
+                       formData.role === 'sales' 
+                         ? 'opacity-100 transform scale-100 rotate-0 text-white' 
+                         : 'opacity-0 transform scale-50 -rotate-45 translate-x-2'
+                     }`} 
+                   />
+                   {/* Lock Closed Icon for Admin - More Secure */}
+                   <Lock 
+                     className={`absolute inset-0 transition-all duration-700 ease-in-out ${
+                       formData.role === 'admin' 
+                         ? 'opacity-100 transform scale-100 rotate-0 text-white' 
+                         : 'opacity-0 transform scale-50 rotate-45 -translate-x-2'
+                     }`} 
+                   />
+                   {/* Animated ring around the lock */}
+                   <div className={`absolute inset-0 rounded-full border-2 transition-all duration-700 ease-in-out ${
+                     formData.role === 'sales'
+                       ? 'border-blue-300/50 scale-125 opacity-60'
+                       : 'border-amber-300/50 scale-125 opacity-60'
+                   }`} />
+                 </div>
+                 <span className="transition-all duration-500 ease-in-out font-medium">
+                   Sign In as {formData.role === 'admin' ? 'Admin' : 'Sales'}
+                 </span>
+               </div>
+             )}
           </button>
         </div>
 

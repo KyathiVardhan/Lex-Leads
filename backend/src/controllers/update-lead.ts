@@ -14,13 +14,6 @@ const updateLead = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { leadId } = req.params;
         const {
-            type_of_lead,
-            project_name,
-            name_of_lead,
-            designation_of_lead,
-            company_name,
-            phone_number_of_lead,
-            email_of_lead,
             intrested,
             follow_up_conversation,
             status
@@ -38,10 +31,10 @@ const updateLead = async (req: AuthenticatedRequest, res: Response) => {
         }
 
         // Validate required fields
-        if (!type_of_lead || !project_name || !name_of_lead || !designation_of_lead || !company_name || !phone_number_of_lead || !email_of_lead) {
+        if (!intrested || !status) {
             res.status(400).json({
                 success: false,
-                message: "All required fields must be provided"
+                message: "Interest level and status are required fields"
             });
             return;
         }
@@ -63,17 +56,10 @@ const updateLead = async (req: AuthenticatedRequest, res: Response) => {
             return;
         }
 
-        // Update the lead
+        // Update only the allowed fields
         const updatedLead = await AddNewLead.findByIdAndUpdate(
             leadId,
             {
-                type_of_lead,
-                project_name,
-                name_of_lead,
-                designation_of_lead,
-                company_name,
-                phone_number_of_lead,
-                email_of_lead,
                 intrested,
                 follow_up_conversation,
                 status,

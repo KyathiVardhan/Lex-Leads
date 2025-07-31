@@ -21,7 +21,7 @@ import EditLeadModal from "./EditLeadModal";
 // Lead data interface
 interface LeadData {
   _id: string;
-  type_of_lead: "lead" | "speaker" | "sponsor" | "awards" | "other";
+  type_of_lead: string;
   project_name: string;
   name_of_lead: string;
   designation_of_lead: string;
@@ -158,10 +158,7 @@ const SalesPersonReport = () => {
 
     setIsQuickEditLoading(true);
     try {
-      const response = await API.put(`/sales/leads/${quickEditingId}`, {
-        ...leads.find((lead) => lead._id === quickEditingId),
-        ...quickEditData,
-      });
+      const response = await API.put(`/sales/leads/${quickEditingId}`, quickEditData);
 
       if (response.data.success) {
         setLeads((prevLeads) =>
@@ -615,7 +612,7 @@ const SalesPersonReport = () => {
                                   className="flex items-center gap-1 px-2 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700 transition-colors"
                                 >
                                   <Edit size={12} />
-                                  Full Edit
+                                  View Edit
                                 </button>
                               </>
                             )}
