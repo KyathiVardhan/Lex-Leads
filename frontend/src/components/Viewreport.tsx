@@ -42,6 +42,7 @@ interface LeadData {
   created_at: string;
   updated_at: string;
   sales_person_name?: string; // Added for admin view
+  sales_person_email?: string; // Added for admin view
 }
 
 interface Column {
@@ -294,7 +295,8 @@ const AdminLeadsReport = () => {
   const columns: Column[] = [
     { key: "type_of_lead", label: "Type" },
     { key: "project_name", label: "Project" },
-    { key: "name_of_lead", label: "Name" },
+    { key: "created_by", label: "Sales Person" }, // Move Sales Person here
+    { key: "name_of_lead", label: "Lead's Name" }, // Rename Name column
     { key: "designation_of_lead", label: "Designation" },
     { key: "company_name", label: "Company" },
     { key: "phone_number_of_lead", label: "Phone" },
@@ -303,7 +305,6 @@ const AdminLeadsReport = () => {
     { key: "follow_up_conversation", label: "Follow Up" },
     { key: "status", label: "Status" },
     { key: "created_at", label: "Created" },
-    { key: "created_by", label: "Sales Person" },
   ];
 
   const getStatusColor = (status: string) => {
@@ -645,6 +646,16 @@ const AdminLeadsReport = () => {
                           {lead.project_name}
                         </td>
                       )}
+                      {columnVisibility.created_by && (
+                        <td className="px-4 py-3">
+                          <div className="flex items-center">
+                            <Users className="w-4 h-4 mr-2 text-gray-400" />
+                            <span className="font-medium text-gray-900" title={lead.sales_person_email || undefined}>
+                              {lead.sales_person_name || lead.created_by}
+                            </span>
+                          </div>
+                        </td>
+                      )}
                       {columnVisibility.name_of_lead && (
                         <td className="px-4 py-3">
                           <div className="flex items-center">
@@ -782,16 +793,6 @@ const AdminLeadsReport = () => {
                             <Calendar className="w-4 h-4 mr-2 text-gray-400" />
                             <span className="text-gray-700">
                               {formatDate(lead.created_at)}
-                            </span>
-                          </div>
-                        </td>
-                      )}
-                      {columnVisibility.created_by && (
-                        <td className="px-4 py-3">
-                          <div className="flex items-center">
-                            <Users className="w-4 h-4 mr-2 text-gray-400" />
-                            <span className="font-medium text-gray-900">
-                              {lead.created_by}
                             </span>
                           </div>
                         </td>

@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import AdminAuthMiddleware from "../middleware/admin-auth-middleware";
 import isAdminUser from "../middleware/admin-middleware";
+import getAllLeadsForAdmin from "../controllers/get-all-leads-admin";
 
 interface AuthenticatedRequest extends Request {
     userInfo?: {
@@ -18,5 +19,7 @@ router.get('/welcome-admin', AdminAuthMiddleware, isAdminUser, (req: Authenticat
         user: req.userInfo
     });
 });
+
+router.get('/leads', AdminAuthMiddleware, isAdminUser, getAllLeadsForAdmin);
 
 export default router; 
