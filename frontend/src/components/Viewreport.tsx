@@ -53,6 +53,7 @@ interface Column {
 interface ColumnVisibility {
   type_of_lead: boolean;
   project_name: boolean;
+  created_by: boolean;
   name_of_lead: boolean;
   designation_of_lead: boolean;
   company_name: boolean;
@@ -62,8 +63,6 @@ interface ColumnVisibility {
   follow_up_conversation: boolean;
   status: boolean;
   created_at: boolean;
-  created_by: boolean;
-  actions: boolean;
 }
 
 interface QuickEditData {
@@ -92,6 +91,7 @@ const AdminLeadsReport = () => {
   const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
     type_of_lead: true,
     project_name: true,
+    created_by: true,
     name_of_lead: true,
     designation_of_lead: true,
     company_name: true,
@@ -101,10 +101,8 @@ const AdminLeadsReport = () => {
     follow_up_conversation: true,
     status: true,
     created_at: true,
-    created_by: true,
-    actions: true,
   });
-  
+
   const [globalFilter, setGlobalFilter] = useState("");
   const [showColumnMenu, setShowColumnMenu] = useState(false);
   const [editingLead, setEditingLead] = useState<LeadData | null>(null);
@@ -140,9 +138,13 @@ const AdminLeadsReport = () => {
         // Fetch all leads data from API
         const response = await API.get("/admin/leads");
         setLeads(response.data.leads || []);
-        
+
         // Extract unique sales persons
-        const uniqueSalesPersons = [...new Set(response.data.leads?.map((lead: LeadData) => lead.created_by) || [])] as string[];
+        const uniqueSalesPersons = [
+          ...new Set(
+            response.data.leads?.map((lead: LeadData) => lead.created_by) || []
+          ),
+        ] as string[];
         setSalesPersons(uniqueSalesPersons);
       } catch (error) {
         console.error("Error fetching leads:", error);
@@ -226,13 +228,15 @@ const AdminLeadsReport = () => {
   // Calculate performance metrics
   const performanceMetrics = useMemo((): PerformanceMetrics => {
     const total = leads.length;
-    const open = leads.filter(lead => lead.status === "Open").length;
-    const closed = leads.filter(lead => lead.status === "Close").length;
-    const hot = leads.filter(lead => lead.intrested === "HOT").length;
-    const warm = leads.filter(lead => lead.intrested === "WARM").length;
-    const cold = leads.filter(lead => lead.intrested === "COLD").length;
-    const notInterested = leads.filter(lead => lead.intrested === "NOT INTERESTED").length;
-    const conversionRate = total > 0 ? ((closed / total) * 100) : 0;
+    const open = leads.filter((lead) => lead.status === "Open").length;
+    const closed = leads.filter((lead) => lead.status === "Close").length;
+    const hot = leads.filter((lead) => lead.intrested === "HOT").length;
+    const warm = leads.filter((lead) => lead.intrested === "WARM").length;
+    const cold = leads.filter((lead) => lead.intrested === "COLD").length;
+    const notInterested = leads.filter(
+      (lead) => lead.intrested === "NOT INTERESTED"
+    ).length;
+    const conversionRate = total > 0 ? (closed / total) * 100 : 0;
 
     return {
       totalLeads: total,
@@ -242,32 +246,38 @@ const AdminLeadsReport = () => {
       warmLeads: warm,
       coldLeads: cold,
       notInterestedLeads: notInterested,
-      conversionRate: conversionRate
+      conversionRate: conversionRate,
     };
   }, [leads]);
 
   const filteredLeads = useMemo(() => {
     let filtered = leads.filter((lead) =>
-      Object.values(lead).some((value) =>
-        value?.toString().toLowerCase().includes(globalFilter.toLowerCase())
-      )
+      (lead.sales_person_name || "")
+        .toLowerCase()
+        .includes(globalFilter.toLowerCase())
     );
 
     // Apply filters
-    if (selectedSalesPerson !== "all") {
-      filtered = filtered.filter(lead => lead.created_by === selectedSalesPerson);
-    }
-
     if (selectedStatus !== "all") {
-      filtered = filtered.filter(lead => lead.status === selectedStatus);
+      filtered = filtered.filter((lead) => lead.status === selectedStatus);
     }
 
     if (selectedInterest !== "all") {
-      filtered = filtered.filter(lead => lead.intrested === selectedInterest);
+      filtered = filtered.filter((lead) => lead.intrested === selectedInterest);
     }
 
     if (selectedLeadType !== "all") {
-      filtered = filtered.filter(lead => lead.type_of_lead === selectedLeadType);
+      if (selectedLeadType === "other") {
+        // For "other", show all types except lead, speaker, sponsor, awards
+        filtered = filtered.filter(
+          (lead) => !["lead", "speaker", "sponsor", "awards"].includes(lead.type_of_lead)
+        );
+      } else {
+        // For specific types, filter normally
+        filtered = filtered.filter(
+          (lead) => lead.type_of_lead === selectedLeadType
+        );
+      }
     }
 
     // Sort by status first (Open first, Close last), then by interest priority
@@ -290,13 +300,13 @@ const AdminLeadsReport = () => {
 
       return aPriority - bPriority;
     });
-  }, [leads, globalFilter, selectedSalesPerson, selectedStatus, selectedInterest, selectedLeadType]);
+  }, [leads, globalFilter, selectedStatus, selectedInterest, selectedLeadType]);
 
   const columns: Column[] = [
     { key: "type_of_lead", label: "Type" },
     { key: "project_name", label: "Project" },
-    { key: "created_by", label: "Sales Person" }, // Move Sales Person here
-    { key: "name_of_lead", label: "Lead's Name" }, // Rename Name column
+    { key: "created_by", label: "Sales Person" },
+    { key: "name_of_lead", label: "Lead's Name" },
     { key: "designation_of_lead", label: "Designation" },
     { key: "company_name", label: "Company" },
     { key: "phone_number_of_lead", label: "Phone" },
@@ -374,37 +384,47 @@ const AdminLeadsReport = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-blue-600">Total Leads</p>
-                <p className="text-2xl font-bold text-blue-900">{performanceMetrics.totalLeads}</p>
+                <p className="text-2xl font-bold text-blue-900">
+                  {performanceMetrics.totalLeads}
+                </p>
               </div>
               <BarChart3 className="w-8 h-8 text-blue-600" />
             </div>
           </div>
-          
+
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-green-600">Open Leads</p>
-                <p className="text-2xl font-bold text-green-900">{performanceMetrics.openLeads}</p>
+                <p className="text-2xl font-bold text-green-900">
+                  {performanceMetrics.openLeads}
+                </p>
               </div>
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
           </div>
-          
+
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-red-600">Closed Leads</p>
-                <p className="text-2xl font-bold text-red-900">{performanceMetrics.closedLeads}</p>
+                <p className="text-2xl font-bold text-red-900">
+                  {performanceMetrics.closedLeads}
+                </p>
               </div>
               <XCircle className="w-8 h-8 text-red-600" />
             </div>
           </div>
-          
+
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-600">Conversion Rate</p>
-                <p className="text-2xl font-bold text-purple-900">{performanceMetrics.conversionRate.toFixed(1)}%</p>
+                <p className="text-sm font-medium text-purple-600">
+                  Conversion Rate
+                </p>
+                <p className="text-2xl font-bold text-purple-900">
+                  {performanceMetrics.conversionRate.toFixed(1)}%
+                </p>
               </div>
               <TrendingUp className="w-8 h-8 text-purple-600" />
             </div>
@@ -417,37 +437,47 @@ const AdminLeadsReport = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-red-600">HOT</p>
-                <p className="text-lg font-bold text-red-900">{performanceMetrics.hotLeads}</p>
+                <p className="text-lg font-bold text-red-900">
+                  {performanceMetrics.hotLeads}
+                </p>
               </div>
               <div className="w-3 h-3 bg-red-500 rounded-full"></div>
             </div>
           </div>
-          
+
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-yellow-600">WARM</p>
-                <p className="text-lg font-bold text-yellow-900">{performanceMetrics.warmLeads}</p>
+                <p className="text-lg font-bold text-yellow-900">
+                  {performanceMetrics.warmLeads}
+                </p>
               </div>
               <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
             </div>
           </div>
-          
+
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-blue-600">COLD</p>
-                <p className="text-lg font-bold text-blue-900">{performanceMetrics.coldLeads}</p>
+                <p className="text-lg font-bold text-blue-900">
+                  {performanceMetrics.coldLeads}
+                </p>
               </div>
               <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
             </div>
           </div>
-          
+
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-600">NOT INTERESTED</p>
-                <p className="text-lg font-bold text-gray-900">{performanceMetrics.notInterestedLeads}</p>
+                <p className="text-xs font-medium text-gray-600">
+                  NOT INTERESTED
+                </p>
+                <p className="text-lg font-bold text-gray-900">
+                  {performanceMetrics.notInterestedLeads}
+                </p>
               </div>
               <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
             </div>
@@ -467,26 +497,13 @@ const AdminLeadsReport = () => {
                 <Search size={16} className="text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search leads..."
+                  placeholder="Search sales person..."
                   value={globalFilter}
                   onChange={(e) => setGlobalFilter(e.target.value)}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 />
               </div>
-
-              <select
-                value={selectedSalesPerson}
-                onChange={(e) => setSelectedSalesPerson(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">All Sales Persons</option>
-                {salesPersons.map((person) => (
-                  <option key={person} value={person}>
-                    {person}
-                  </option>
-                ))}
-              </select>
-
+              {/* Remove Sales Person dropdown filter */}
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
@@ -496,7 +513,6 @@ const AdminLeadsReport = () => {
                 <option value="Open">Open</option>
                 <option value="Close">Close</option>
               </select>
-
               <select
                 value={selectedInterest}
                 onChange={(e) => setSelectedInterest(e.target.value)}
@@ -508,7 +524,6 @@ const AdminLeadsReport = () => {
                 <option value="COLD">COLD</option>
                 <option value="NOT INTERESTED">NOT INTERESTED</option>
               </select>
-
               <select
                 value={selectedLeadType}
                 onChange={(e) => setSelectedLeadType(e.target.value)}
@@ -564,20 +579,6 @@ const AdminLeadsReport = () => {
                           <span className="text-sm">{col.label}</span>
                         </label>
                       ))}
-                      <label className="flex items-center gap-2 p-2 hover:bg-gray-50 cursor-pointer rounded">
-                        <input
-                          type="checkbox"
-                          checked={columnVisibility.actions}
-                          onChange={(e) =>
-                            setColumnVisibility((prev) => ({
-                              ...prev,
-                              actions: e.target.checked,
-                            }))
-                          }
-                          className="rounded text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="text-sm">Actions</span>
-                      </label>
                     </div>
                   </div>
                 )}
@@ -600,11 +601,6 @@ const AdminLeadsReport = () => {
                         </th>
                       )
                   )}
-                  {columnVisibility.actions && (
-                    <th className="px-4 py-3 text-left font-medium text-gray-900 text-sm">
-                      Actions
-                    </th>
-                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -615,7 +611,7 @@ const AdminLeadsReport = () => {
                         columns.filter(
                           (col) =>
                             columnVisibility[col.key as keyof ColumnVisibility]
-                        ).length + (columnVisibility.actions ? 1 : 0)
+                        ).length
                       }
                       className="px-4 py-12 text-center text-gray-500"
                     >
@@ -650,7 +646,10 @@ const AdminLeadsReport = () => {
                         <td className="px-4 py-3">
                           <div className="flex items-center">
                             <Users className="w-4 h-4 mr-2 text-gray-400" />
-                            <span className="font-medium text-gray-900" title={lead.sales_person_email || undefined}>
+                            <span
+                              className="font-medium text-gray-900"
+                              title={lead.sales_person_email || undefined}
+                            >
                               {lead.sales_person_name || lead.created_by}
                             </span>
                           </div>
@@ -794,51 +793,6 @@ const AdminLeadsReport = () => {
                             <span className="text-gray-700">
                               {formatDate(lead.created_at)}
                             </span>
-                          </div>
-                        </td>
-                      )}
-                      {columnVisibility.actions && (
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            {quickEditingId === lead._id ? (
-                              <>
-                                <button
-                                  onClick={handleQuickEditSave}
-                                  disabled={
-                                    isQuickEditLoading ||
-                                    !hasQuickEditChanges(lead)
-                                  }
-                                  className="flex items-center gap-1 px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                >
-                                  <Save size={12} />
-                                  {isQuickEditLoading ? "Saving..." : "Update"}
-                                </button>
-                                <button
-                                  onClick={handleQuickEditCancel}
-                                  className="flex items-center gap-1 px-2 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600 transition-colors"
-                                >
-                                  <X size={12} />
-                                  Cancel
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button
-                                  onClick={() => handleQuickEdit(lead)}
-                                  className="flex items-center gap-1 px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors"
-                                >
-                                  <Edit size={12} />
-                                  Quick Edit
-                                </button>
-                                <button
-                                  onClick={() => handleEditLead(lead)}
-                                  className="flex items-center gap-1 px-2 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700 transition-colors"
-                                >
-                                  <Edit size={12} />
-                                  Full Edit
-                                </button>
-                              </>
-                            )}
                           </div>
                         </td>
                       )}

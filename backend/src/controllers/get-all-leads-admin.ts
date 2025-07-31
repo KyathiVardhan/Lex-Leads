@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import AddNewLead from "../models/AddNewLead";
+import SalesUser from "../models/SalesUser";
 import { Types } from "mongoose";
 
 const getAllLeadsForAdmin = async (req: Request, res: Response) => {
@@ -9,6 +10,9 @@ const getAllLeadsForAdmin = async (req: Request, res: Response) => {
       .sort({ created_at: -1 })
       .populate("created_by", "name email")
       .lean();
+
+    // Fetch sales users data
+    const salesUsers = await SalesUser.find().lean();
 
     // Type for populated created_by
     type PopulatedLead = typeof leads[number] & {
@@ -32,10 +36,50 @@ const getAllLeadsForAdmin = async (req: Request, res: Response) => {
       };
     });
 
+    // Calculate performance metrics
+    const totalLeads = leadsWithSalesPerson.length;
+    const openLeads = leadsWithSalesPerson.filter(lead => lead.status === "Open").length;
+    const closedLeads = leadsWithSalesPerson.filter(lead => lead.status === "Close").length;
+    const hotLeads = leadsWithSalesPerson.filter(lead => lead.intrested === "HOT").length;
+    const warmLeads = leadsWithSalesPerson.filter(lead => lead.intrested === "WARM").length;
+    const coldLeads = leadsWithSalesPerson.filter(lead => lead.intrested === "COLD").length;
+    const notInterestedLeads = leadsWithSalesPerson.filter(lead => lead.intrested === "NOT INTERESTED").length;
+    const conversionRate = totalLeads > 0 ? ((closedLeads / totalLeads) * 100) : 0;
+
+    // Calculate sales user metrics
+    const totalSalesUsers = salesUsers.length;
+    const activeSalesUsers = salesUsers.filter(user => user.isActive).length;
+    const salesPerformance = totalSalesUsers > 0 ? ((activeSalesUsers / totalSalesUsers) * 100) : 0;
+    
+    // Calculate this month's new users (users created in current month)
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const thisMonthUsers = salesUsers.filter(user => {
+      const userDate = new Date(user.createdAt);
+      return userDate.getMonth() === currentMonth && userDate.getFullYear() === currentYear;
+    }).length;
+
+    const performanceMetrics = {
+      totalLeads,
+      openLeads,
+      closedLeads,
+      hotLeads,
+      warmLeads,
+      coldLeads,
+      notInterestedLeads,
+      conversionRate,
+      // Sales user metrics
+      totalSalesUsers,
+      activeSalesUsers,
+      salesPerformance,
+      thisMonthUsers
+    };
+
     res.status(200).json({
       success: true,
       message: "All leads fetched successfully",
       leads: leadsWithSalesPerson,
+      performanceMetrics
     });
   } catch (error: any) {
     console.error("Error fetching all leads for admin:", error);

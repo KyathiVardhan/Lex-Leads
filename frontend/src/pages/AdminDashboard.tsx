@@ -16,6 +16,22 @@ interface Errors {
   password?: string;
 }
 
+interface PerformanceMetrics {
+  totalLeads: number;
+  openLeads: number;
+  closedLeads: number;
+  hotLeads: number;
+  warmLeads: number;
+  coldLeads: number;
+  notInterestedLeads: number;
+  conversionRate: number;
+  // Sales user metrics
+  totalSalesUsers: number;
+  activeSalesUsers: number;
+  salesPerformance: number;
+  thisMonthUsers: number;
+}
+
 export default function AdminDashboard() {
   const [salesUserData, setSalesUserData] = useState<SalesUserData>({
     name: '',
@@ -28,6 +44,20 @@ export default function AdminDashboard() {
   const [errors, setErrors] = useState<Errors>({});
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
+    totalLeads: 0,
+    openLeads: 0,
+    closedLeads: 0,
+    hotLeads: 0,
+    warmLeads: 0,
+    coldLeads: 0,
+    notInterestedLeads: 0,
+    conversionRate: 0,
+    totalSalesUsers: 0,
+    activeSalesUsers: 0,
+    salesPerformance: 0,
+    thisMonthUsers: 0
+  });
 
   // Auto-hide success messages after 5 seconds
   useEffect(() => {
@@ -59,6 +89,17 @@ export default function AdminDashboard() {
             Authorization: `Bearer ${token}`
           }
         });
+
+        // Fetch performance metrics from leads
+        const leadsResponse = await API.get('/admin/leads', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        if (leadsResponse.data.performanceMetrics) {
+          setPerformanceMetrics(leadsResponse.data.performanceMetrics);
+        }
       } catch (error) {
         console.error('Authentication failed:', error);
         localStorage.removeItem('token');
@@ -152,24 +193,24 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="bg-amber-600 p-2 rounded-lg">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg">
                 <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                <p className="text-amber-600 text-sm sm:text-base">Manage your sales team</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Admin Dashboard</h1>
+                <p className="text-blue-600 text-sm sm:text-base">Manage your sales team</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-3 sm:px-4 py-2 rounded-lg transition-colors duration-200 text-sm sm:text-base"
+                className="flex items-center space-x-2 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white px-4 sm:px-5 py-2 rounded-xl transition-all duration-200 text-sm sm:text-base shadow-md hover:shadow-lg font-medium"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Logout</span>
@@ -185,7 +226,7 @@ export default function AdminDashboard() {
         {message && (
           <div className={`mb-6 p-3 sm:p-4 rounded-lg flex items-center space-x-3 ${
             message.type === 'success' 
-              ? 'bg-green-50 border border-green-200 text-green-800' 
+              ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' 
               : 'bg-red-50 border border-red-200 text-red-800'
           }`}>
             {message.type === 'success' ? (
@@ -199,49 +240,49 @@ export default function AdminDashboard() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-lg">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-amber-600 text-xs sm:text-sm font-medium">Total Sales Users</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">12</p>
+                <p className="text-blue-600 text-xs sm:text-sm font-medium">Total Sales Users</p>
+                <p className="text-2xl sm:text-3xl font-bold text-slate-900">{performanceMetrics.totalSalesUsers}</p>
               </div>
-              <div className="bg-amber-600 p-2 sm:p-3 rounded-lg">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-2 sm:p-3 rounded-lg">
                 <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-lg">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-emerald-600 text-xs sm:text-sm font-medium">Active Users</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">8</p>
+                <p className="text-emerald-600 text-xs sm:text-sm font-medium">Converted Leads</p>
+                <p className="text-2xl sm:text-3xl font-bold text-slate-900">{performanceMetrics.closedLeads}</p>
               </div>
-              <div className="bg-emerald-500 p-2 sm:p-3 rounded-lg">
+              <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-2 sm:p-3 rounded-lg">
                 <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-lg">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-indigo-600 text-xs sm:text-sm font-medium">Performance</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">85%</p>
+                <p className="text-purple-600 text-xs sm:text-sm font-medium">Conversion Rate</p>
+                <p className="text-2xl sm:text-3xl font-bold text-slate-900">{performanceMetrics.conversionRate.toFixed(1)}%</p>
               </div>
-              <div className="bg-indigo-500 p-2 sm:p-3 rounded-lg">
+              <div className="bg-gradient-to-r from-purple-500 to-indigo-500 p-2 sm:p-3 rounded-lg">
                 <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-lg">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-600 text-xs sm:text-sm font-medium">This Month</p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">3</p>
+                <p className="text-indigo-600 text-xs sm:text-sm font-medium">This Month</p>
+                <p className="text-2xl sm:text-3xl font-bold text-slate-900">{performanceMetrics.thisMonthUsers}</p>
               </div>
-              <div className="bg-blue-500 p-2 sm:p-3 rounded-lg">
+              <div className="bg-gradient-to-r from-indigo-500 to-blue-500 p-2 sm:p-3 rounded-lg">
                 <User className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
             </div>
@@ -251,43 +292,43 @@ export default function AdminDashboard() {
         {/* Main Content Area */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Recent Activity */}
-          <div className="lg:col-span-2 bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-lg">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
+          <div className="lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-slate-200 shadow-lg">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4">Recent Activity</h2>
             <div className="space-y-3 sm:space-y-4">
               {[1, 2, 3, 4, 5].map((item) => (
-                <div key={item} className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
-                  <div className="bg-amber-600 p-2 rounded-full flex-shrink-0">
+                <div key={item} className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 bg-slate-50/50 rounded-lg hover:bg-slate-100/50 transition-colors duration-200">
+                  <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 rounded-full flex-shrink-0">
                     <User className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-gray-900 font-medium text-sm sm:text-base">New sales user added</p>
-                    <p className="text-amber-600 text-xs sm:text-sm truncate">John Doe - john@example.com</p>
+                    <p className="text-slate-900 font-medium text-sm sm:text-base">New sales user added</p>
+                    <p className="text-blue-600 text-xs sm:text-sm truncate">John Doe - john@example.com</p>
                   </div>
-                  <span className="text-gray-500 text-xs sm:text-sm flex-shrink-0">2 hours ago</span>
+                  <span className="text-slate-500 text-xs sm:text-sm flex-shrink-0">2 hours ago</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-lg">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-slate-200 shadow-lg">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4">Quick Actions</h2>
             <div className="space-y-3">
               <button 
                 onClick={() => setShowCreateForm(true)}
-                className="w-full bg-amber-600 hover:bg-amber-700 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base shadow-md hover:shadow-lg transform hover:scale-105"
               >
                 <UserPlus className="w-4 h-4" />
                 <span>Add Sales Person</span>
               </button>
-              <button onClick={() => navigate('/viewreport')} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base">
+              <button onClick={() => navigate('/viewreport')} className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base shadow-md hover:shadow-lg transform hover:scale-105">
                 <Users className="w-4 h-4"/>
                 <span>View All Users</span>
               </button>
-              <button className="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base">
+              {/* <button className="w-full bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base shadow-md hover:shadow-lg transform hover:scale-105">
                 <Settings className="w-4 h-4" />
                 <span>Settings</span>
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
@@ -295,12 +336,12 @@ export default function AdminDashboard() {
         {/* Create Sales User Modal */}
         {showCreateForm && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 w-full max-w-md shadow-2xl border border-gray-200">
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 sm:p-6 lg:p-8 w-full max-w-md shadow-2xl border border-slate-200">
               <div className="flex justify-between items-center mb-4 sm:mb-6">
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Add Sales User</h3>
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-900">Add Sales User</h3>
                 <button
                   onClick={() => setShowCreateForm(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                  className="text-slate-400 hover:text-slate-600 transition-colors duration-200"
                 >
                   <X className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
@@ -309,7 +350,7 @@ export default function AdminDashboard() {
               <form onSubmit={handleCreateSalesUser} className="space-y-4 sm:space-y-6">
                 {/* Name */}
                 <div>
-                  <label htmlFor="name" className="block text-sm font-semibold text-gray-900 mb-2">
+                  <label htmlFor="name" className="block text-sm font-semibold text-slate-900 mb-2">
                     Full Name
                   </label>
                   <input
@@ -318,10 +359,10 @@ export default function AdminDashboard() {
                     type="text"
                     value={salesUserData.name}
                     onChange={handleInputChange}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all duration-200 text-sm sm:text-base ${
+                    className={`w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all duration-200 text-sm sm:text-base ${
                       errors.name
                         ? 'border-red-400 focus:ring-red-400'
-                        : 'border-gray-200 focus:ring-amber-400 focus:border-amber-400'
+                        : 'border-slate-200 focus:ring-blue-400 focus:border-blue-400'
                     }`}
                     placeholder="Enter full name"
                   />
@@ -330,7 +371,7 @@ export default function AdminDashboard() {
 
                 {/* Email */}
                 <div>
-                  <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
+                  <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2">
                     Email Address
                   </label>
                   <input
@@ -339,10 +380,10 @@ export default function AdminDashboard() {
                     type="email"
                     value={salesUserData.email}
                     onChange={handleInputChange}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all duration-200 text-sm sm:text-base ${
+                    className={`w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all duration-200 text-sm sm:text-base ${
                       errors.email
                         ? 'border-red-400 focus:ring-red-400'
-                        : 'border-gray-200 focus:ring-amber-400 focus:border-amber-400'
+                        : 'border-slate-200 focus:ring-blue-400 focus:border-blue-400'
                     }`}
                     placeholder="Enter email address"
                   />
@@ -351,7 +392,7 @@ export default function AdminDashboard() {
 
                 {/* Password */}
                 <div>
-                  <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-2">
+                  <label htmlFor="password" className="block text-sm font-semibold text-slate-900 mb-2">
                     Password
                   </label>
                   <input
@@ -360,10 +401,10 @@ export default function AdminDashboard() {
                     type="password"
                     value={salesUserData.password}
                     onChange={handleInputChange}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 transition-all duration-200 text-sm sm:text-base ${
+                    className={`w-full px-3 sm:px-4 py-2 sm:py-3 bg-white border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-all duration-200 text-sm sm:text-base ${
                       errors.password
                         ? 'border-red-400 focus:ring-red-400'
-                        : 'border-gray-200 focus:ring-amber-400 focus:border-amber-400'
+                        : 'border-slate-200 focus:ring-blue-400 focus:border-blue-400'
                     }`}
                     placeholder="Enter password"
                   />
@@ -374,7 +415,7 @@ export default function AdminDashboard() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-2 sm:py-3 px-3 sm:px-4 bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-700 hover:to-yellow-600 text-white rounded-lg font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-white disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg text-sm sm:text-base"
+                  className="w-full py-2 sm:py-3 px-3 sm:px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-medium transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-white disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg text-sm sm:text-base"
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center space-x-2">
