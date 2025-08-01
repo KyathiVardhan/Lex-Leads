@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, User, Building, Phone, Mail, Award,  FileText, Eye } from 'lucide-react';
+import { X, Save, User, Building, Phone, Mail, Award,  FileText, Eye, Share2, Users } from 'lucide-react';
 import API from '../api/axios';
 
 interface LeadData {
@@ -11,6 +11,9 @@ interface LeadData {
   company_name: string;
   phone_number_of_lead: string;
   email_of_lead: string;
+  source_of_lead: string;
+  reference_name: string;
+  reference_phone_number: string;
   intrested: 'HOT' | 'COLD' | 'WARM' | 'NOT INTERESTED';
   follow_up_conversation: string;
   status: 'Open' | 'Close';
@@ -186,6 +189,17 @@ const EditLeadModal: React.FC<EditLeadModalProps> = ({ isOpen, onClose, lead, on
               </div>
             </div>
 
+            {/* Source of Lead - Read Only */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Share2 className="w-4 h-4 inline mr-2" />
+                Source of Lead
+              </label>
+              <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+                {lead.source_of_lead}
+              </div>
+            </div>
+
             {/* Interest Level - Editable */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -230,6 +244,33 @@ const EditLeadModal: React.FC<EditLeadModalProps> = ({ isOpen, onClose, lead, on
               )}
             </div>
           </div>
+
+          {/* Reference Fields - Only show if source is referral */}
+          {lead.source_of_lead === "referral" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Reference Name - Read Only */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Users className="w-4 h-4 inline mr-2" />
+                  Reference Name
+                </label>
+                <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+                  {lead.reference_name || 'N/A'}
+                </div>
+              </div>
+
+              {/* Reference Phone Number - Read Only */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Phone className="w-4 h-4 inline mr-2" />
+                  Reference Phone Number
+                </label>
+                <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+                  {lead.reference_phone_number || 'N/A'}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Follow Up Conversation - Editable */}
           <div>

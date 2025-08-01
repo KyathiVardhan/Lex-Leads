@@ -19,7 +19,7 @@ app.use(cors());
 //routes
 app.use("/api/auth", authRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/admin', addSalesRoutes); // add sales routes
+app.use('/api/admin', addSalesRoutes); 
 app.use('/api/login-sales', salesAuthRoutes);
 app.use('/api/sales', addLeadsToSales);
 app.use('/api/sales', customLeadTypesRoutes);

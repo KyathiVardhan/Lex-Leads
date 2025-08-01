@@ -8,6 +8,23 @@ export interface ISalesUser extends Document {
     createdAt: Date;
     updatedAt: Date;
     isActive: boolean;
+    columnPreferences?: {
+        type_of_lead: boolean;
+        project_name: boolean;
+        name_of_lead: boolean;
+        designation_of_lead: boolean;
+        company_name: boolean;
+        phone_number_of_lead: boolean;
+        email_of_lead: boolean;
+        source_of_lead: boolean;
+        reference_name: boolean;
+        reference_phone_number: boolean;
+        intrested: boolean;
+        follow_up_conversation: boolean;
+        status: boolean;
+        created_at: boolean;
+        actions: boolean;
+    };
 }
 
 const salesUserSchema = new Schema<ISalesUser>({
@@ -47,6 +64,23 @@ const salesUserSchema = new Schema<ISalesUser>({
     isActive: {
         type: Boolean,
         default: true,
+    },
+    columnPreferences: {
+        type_of_lead: { type: Boolean, default: true },
+        project_name: { type: Boolean, default: true },
+        name_of_lead: { type: Boolean, default: true },
+        designation_of_lead: { type: Boolean, default: true },
+        company_name: { type: Boolean, default: true },
+        phone_number_of_lead: { type: Boolean, default: true },
+        email_of_lead: { type: Boolean, default: true },
+        source_of_lead: { type: Boolean, default: true },
+        reference_name: { type: Boolean, default: false },
+        reference_phone_number: { type: Boolean, default: false },
+        intrested: { type: Boolean, default: true },
+        follow_up_conversation: { type: Boolean, default: true },
+        status: { type: Boolean, default: true },
+        created_at: { type: Boolean, default: true },
+        actions: { type: Boolean, default: true },
     },
 });
 

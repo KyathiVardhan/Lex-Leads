@@ -28,6 +28,9 @@ interface LeadData {
   company_name: string;
   phone_number_of_lead: string;
   email_of_lead: string;
+  source_of_lead: string;
+  reference_name: string;
+  reference_phone_number: string;
   intrested: "HOT" | "COLD" | "WARM" | "NOT INTERESTED";
   follow_up_conversation: string;
   status: "Open" | "Close";
@@ -49,6 +52,9 @@ interface ColumnVisibility {
   company_name: boolean;
   phone_number_of_lead: boolean;
   email_of_lead: boolean;
+  source_of_lead: boolean;
+  reference_name: boolean;
+  reference_phone_number: boolean;
   intrested: boolean;
   follow_up_conversation: boolean;
   status: boolean;
@@ -75,6 +81,9 @@ const SalesPersonReport = () => {
     company_name: true,
     phone_number_of_lead: true,
     email_of_lead: true,
+    source_of_lead: true,
+    reference_name: false,
+    reference_phone_number: false,
     intrested: true,
     follow_up_conversation: true,
     status: true,
@@ -224,8 +233,11 @@ const SalesPersonReport = () => {
     { key: "company_name", label: "Company" },
     { key: "phone_number_of_lead", label: "Phone" },
     { key: "email_of_lead", label: "Email" },
+    { key: "source_of_lead", label: "Source" },
+    { key: "reference_name", label: "Reference Name" },
+    { key: "reference_phone_number", label: "Reference Phone" },
     { key: "intrested", label: "Interest" },
-    { key: "follow_up_conversation", label: "Follow Up" },
+    { key: "follow_up_conversation", label: "Follow Up Conversation" },
     { key: "status", label: "Status" },
     { key: "created_at", label: "Created" },
   ];
@@ -482,6 +494,38 @@ const SalesPersonReport = () => {
                               {lead.email_of_lead}
                             </a>
                           </div>
+                        </td>
+                      )}
+                      {columnVisibility.source_of_lead && (
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 border border-indigo-200">
+                            {lead.source_of_lead && lead.source_of_lead.trim() ? lead.source_of_lead : '---'}
+                          </span>
+                        </td>
+                      )}
+                      {columnVisibility.reference_name && (
+                        <td className="px-4 py-3 text-gray-700">
+                          {lead.source_of_lead === "referral" 
+                            ? (lead.reference_name && lead.reference_name.trim() ? lead.reference_name : '---')
+                            : '---'
+                          }
+                        </td>
+                      )}
+                      {columnVisibility.reference_phone_number && (
+                        <td className="px-4 py-3 text-gray-600">
+                          {lead.source_of_lead === "referral" 
+                            ? (lead.reference_phone_number && lead.reference_phone_number.trim() ? (
+                                <a
+                                  href={`tel:${lead.reference_phone_number}`}
+                                  className="hover:text-blue-600 transition-colors"
+                                >
+                                  {lead.reference_phone_number}
+                                </a>
+                              ) : (
+                                '---'
+                              ))
+                            : '---'
+                          }
                         </td>
                       )}
                       {columnVisibility.intrested && (

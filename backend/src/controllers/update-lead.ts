@@ -19,8 +19,9 @@ const updateLead = async (req: AuthenticatedRequest, res: Response) => {
             status
         } = req.body;
 
-        // Get the current user's ID from the authenticated request
+        // Get the current user's ID and role from the authenticated request
         const currentUserId = req.userInfo?.userId;
+        const currentUserRole = req.userInfo?.role;
         
         if (!currentUserId) {
             res.status(401).json({
@@ -42,16 +43,26 @@ const updateLead = async (req: AuthenticatedRequest, res: Response) => {
         // Convert string userId to ObjectId for database query
         const userObjectId = new mongoose.Types.ObjectId(currentUserId);
 
-        // Find the lead and check if it exists and belongs to the current user
-        const existingLead = await AddNewLead.findOne({ 
-            _id: leadId, 
-            created_by: userObjectId 
-        });
+        // Find the lead and check if it exists
+        let existingLead;
+        
+        if (currentUserRole === 'admin') {
+            // Admins can update any lead
+            existingLead = await AddNewLead.findById(leadId);
+        } else {
+            // Sales users can only update their own leads
+            existingLead = await AddNewLead.findOne({ 
+                _id: leadId, 
+                created_by: userObjectId 
+            });
+        }
 
         if (!existingLead) {
             res.status(404).json({
                 success: false,
-                message: "Lead not found or you don't have permission to edit it"
+                message: currentUserRole === 'admin' 
+                    ? "Lead not found" 
+                    : "Lead not found or you don't have permission to edit it"
             });
             return;
         }

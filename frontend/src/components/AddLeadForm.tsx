@@ -9,6 +9,8 @@ import {
   FolderOpen,
   Award,
   ArrowLeft,
+  Share2,
+  Users,
 } from "lucide-react";
 import API from "../api/axios";
 
@@ -21,6 +23,9 @@ interface FormData {
   company_name: string;
   phone_number_of_lead: string;
   email_of_lead: string;
+  source_of_lead: "instagram" | "linkedin" | "referral" | "";
+  reference_name: string;
+  reference_phone_number: string;
 }
 
 interface FormErrors {
@@ -38,6 +43,9 @@ const AddLeadForm: React.FC = () => {
     company_name: "",
     phone_number_of_lead: "",
     email_of_lead: "",
+    source_of_lead: "",
+    reference_name: "",
+    reference_phone_number: "",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -122,6 +130,23 @@ const AddLeadForm: React.FC = () => {
       newErrors.email_of_lead = "Email must be valid and end with .com";
     }
 
+    // Source validation
+    if (!formData.source_of_lead) {
+      newErrors.source_of_lead = "Please select a source";
+    }
+
+    // Reference validation - only required if source is referral
+    if (formData.source_of_lead === "referral") {
+      if (!formData.reference_name.trim()) {
+        newErrors.reference_name = "Reference name is required";
+      }
+      if (!formData.reference_phone_number) {
+        newErrors.reference_phone_number = "Reference phone number is required";
+      } else if (!phoneRegex.test(formData.reference_phone_number)) {
+        newErrors.reference_phone_number = "Reference phone number must be exactly 10 digits";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -131,8 +156,8 @@ const AddLeadForm: React.FC = () => {
   ) => {
     const { name, value } = e.target;
 
-    // For phone number, only allow digits and limit to 10
-    if (name === "phone_number_of_lead") {
+    // For phone numbers, only allow digits and limit to 10
+    if (name === "phone_number_of_lead" || name === "reference_phone_number") {
       const numericValue = value.replace(/\D/g, "").slice(0, 10);
       setFormData((prev) => ({ ...prev, [name]: numericValue }));
     } else {
@@ -163,6 +188,9 @@ const AddLeadForm: React.FC = () => {
         company_name: formData.company_name,
         phone_number_of_lead: formData.phone_number_of_lead,
         email_of_lead: formData.email_of_lead,
+        source_of_lead: formData.source_of_lead,
+        reference_name: formData.reference_name,
+        reference_phone_number: formData.reference_phone_number,
         intrested: 'WARM', // Default value as per model
         follow_up_conversation: '', // Default empty string
         status: 'Open' // Default status
@@ -186,6 +214,9 @@ const AddLeadForm: React.FC = () => {
         company_name: "",
         phone_number_of_lead: "",
         email_of_lead: "",
+        source_of_lead: "",
+        reference_name: "",
+        reference_phone_number: "",
       });
 
       // Navigate back to dashboard after successful submission
@@ -457,7 +488,91 @@ const AddLeadForm: React.FC = () => {
                   </p>
                 )}
               </div>
+
+              {/* Source of Lead */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Share2 className="w-4 h-4 text-blue-600" />
+                  Source of Lead
+                </label>
+                <select
+                  name="source_of_lead"
+                  value={formData.source_of_lead}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 border-2 rounded-lg transition-all duration-200 bg-white ${
+                    errors.source_of_lead
+                      ? "border-red-500 focus:border-red-500"
+                      : "border-gray-300 focus:border-blue-600 hover:border-gray-400"
+                  } focus:outline-none focus:ring-2 focus:ring-blue-100`}
+                >
+                  <option value="">Select source</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="linkedin">LinkedIn</option>
+                  <option value="referral">Referral</option>
+                </select>
+                {errors.source_of_lead && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.source_of_lead}
+                  </p>
+                )}
+              </div>
             </div>
+
+            {/* Reference Fields - Only show when source is referral */}
+            {formData.source_of_lead === "referral" && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Reference Name */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <Users className="w-4 h-4 text-blue-600" />
+                    Reference Name
+                  </label>
+                  <input
+                    type="text"
+                    name="reference_name"
+                    value={formData.reference_name}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border-2 rounded-lg transition-all duration-200 ${
+                      errors.reference_name
+                        ? "border-red-500 focus:border-red-500"
+                        : "border-gray-300 focus:border-blue-600 hover:border-gray-400"
+                    } focus:outline-none focus:ring-2 focus:ring-blue-100`}
+                    placeholder="Enter reference name"
+                  />
+                  {errors.reference_name && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.reference_name}
+                    </p>
+                  )}
+                </div>
+
+                {/* Reference Phone Number */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <Phone className="w-4 h-4 text-blue-600" />
+                    Reference Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    name="reference_phone_number"
+                    value={formData.reference_phone_number}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border-2 rounded-lg transition-all duration-200 ${
+                      errors.reference_phone_number
+                        ? "border-red-500 focus:border-red-500"
+                        : "border-gray-300 focus:border-blue-600 hover:border-gray-400"
+                    } focus:outline-none focus:ring-2 focus:ring-blue-100`}
+                    placeholder="Enter 10-digit reference phone number"
+                    maxLength={10}
+                  />
+                  {errors.reference_phone_number && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.reference_phone_number}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Submit Button */}
             <div className="pt-6">

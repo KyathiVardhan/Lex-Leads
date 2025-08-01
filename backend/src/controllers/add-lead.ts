@@ -22,6 +22,9 @@ const addLeadsToSales = async (req: AuthenticatedRequest, res: Response) => {
             company_name,
             phone_number_of_lead,
             email_of_lead,
+            source_of_lead,
+            reference_name,
+            reference_phone_number,
             intrested = 'COLD', // Default value
             follow_up_conversation = '', // Default value
             status = 'Open' // Default value
@@ -73,6 +76,9 @@ const addLeadsToSales = async (req: AuthenticatedRequest, res: Response) => {
             company_name,
             phone_number_of_lead,
             email_of_lead,
+            source_of_lead,
+            reference_name,
+            reference_phone_number,
             intrested,
             follow_up_conversation,
             status,
@@ -108,6 +114,9 @@ const addLeadsToSales = async (req: AuthenticatedRequest, res: Response) => {
                 company_name,
                 phone_number_of_lead,
                 email_of_lead,
+                source_of_lead,
+                reference_name,
+                reference_phone_number,
                 intrested,
                 follow_up_conversation,
                 status,
