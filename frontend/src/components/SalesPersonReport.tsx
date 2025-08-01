@@ -131,6 +131,43 @@ const SalesPersonReport = () => {
     checkAuth();
   }, [navigate]);
 
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await API.get("/sales/column-preferences", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data.success && res.data.data) {
+          setColumnVisibility(res.data.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch column preferences", err);
+      }
+    };
+    fetchPreferences();
+  }, []);
+
+  useEffect(() => {
+    if (!leads.length) return; // Only save after initial load
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    const savePreferences = async () => {
+      try {
+        await API.put(
+          "/sales/column-preferences",
+          { columnPreferences: columnVisibility },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch (err) {
+        console.error("Failed to save column preferences", err);
+      }
+    };
+    savePreferences();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columnVisibility]);
+
   const handleBackToDashboard = () => {
     navigate("/sales/dashboard");
   };
