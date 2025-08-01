@@ -21,9 +21,11 @@ import {
   Target,
   CheckCircle,
   XCircle,
+
 } from "lucide-react";
 import API from "../api/axios";
 import EditLeadModal from "./EditLeadModal";
+
 
 // Lead data interface
 interface LeadData {
@@ -117,6 +119,8 @@ const AdminLeadsReport = () => {
   const [editingLead, setEditingLead] = useState<LeadData | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
+
+
   // Admin-specific filters
   const [selectedSalesPerson, setSelectedSalesPerson] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
@@ -175,6 +179,8 @@ const AdminLeadsReport = () => {
     setIsEditModalOpen(true);
   };
 
+
+
   const handleUpdateLead = (updatedLead: LeadData) => {
     setLeads((prevLeads) =>
       prevLeads.map((lead) =>
@@ -202,8 +208,14 @@ const AdminLeadsReport = () => {
 
     setIsQuickEditLoading(true);
     try {
+      const currentLead = leads.find((lead) => lead._id === quickEditingId);
+      if (!currentLead) {
+        console.error("Lead not found");
+        return;
+      }
+
       const response = await API.put(`/admin/leads/${quickEditingId}`, {
-        ...leads.find((lead) => lead._id === quickEditingId),
+        ...currentLead,
         ...quickEditData,
       });
 
@@ -260,11 +272,18 @@ const AdminLeadsReport = () => {
   }, [leads]);
 
   const filteredLeads = useMemo(() => {
-    let filtered = leads.filter((lead) =>
-      (lead.sales_person_name || "")
-        .toLowerCase()
-        .includes(globalFilter.toLowerCase())
-    );
+    let filtered = leads.filter((lead) => {
+      const searchTerm = globalFilter.toLowerCase();
+      return (
+        (lead.sales_person_name || lead.created_by || "").toLowerCase().includes(searchTerm) ||
+        (lead.name_of_lead || "").toLowerCase().includes(searchTerm) ||
+        (lead.company_name || "").toLowerCase().includes(searchTerm) ||
+        (lead.project_name || "").toLowerCase().includes(searchTerm) ||
+        (lead.type_of_lead || "").toLowerCase().includes(searchTerm) ||
+        (lead.phone_number_of_lead || "").toLowerCase().includes(searchTerm) ||
+        (lead.email_of_lead || "").toLowerCase().includes(searchTerm)
+      );
+    });
 
     // Apply filters
     if (selectedStatus !== "all") {
@@ -509,7 +528,7 @@ const AdminLeadsReport = () => {
                 <Search size={16} className="text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search sales person..."
+                  placeholder="Search leads, companies, sales persons..."
                   value={globalFilter}
                   onChange={(e) => setGlobalFilter(e.target.value)}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -613,6 +632,9 @@ const AdminLeadsReport = () => {
                         </th>
                       )
                   )}
+                  <th className="px-4 py-3 text-left font-medium text-gray-900 text-sm">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -623,7 +645,7 @@ const AdminLeadsReport = () => {
                         columns.filter(
                           (col) =>
                             columnVisibility[col.key as keyof ColumnVisibility]
-                        ).length
+                        ).length + 1 // +1 for the Actions column
                       }
                       className="px-4 py-12 text-center text-gray-500"
                     >
@@ -840,6 +862,47 @@ const AdminLeadsReport = () => {
                           </div>
                         </td>
                       )}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          {quickEditingId === lead._id ? (
+                            <>
+                              <button
+                                onClick={handleQuickEditSave}
+                                disabled={isQuickEditLoading}
+                                className="flex items-center gap-1 px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <Save className="w-3 h-3" />
+                                Save
+                              </button>
+                              <button
+                                onClick={handleQuickEditCancel}
+                                className="flex items-center gap-1 px-2 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700"
+                              >
+                                <X className="w-3 h-3" />
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleQuickEdit(lead)}
+                                className="flex items-center gap-1 px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                              >
+                                <Edit className="w-3 h-3" />
+                                Quick Edit
+                              </button>
+                                                             <button
+                                 onClick={() => handleEditLead(lead)}
+                                 className="flex items-center gap-1 px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700"
+                               >
+                                 <Eye className="w-3 h-3" />
+                                 View
+                               </button>
+
+                            </>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -859,6 +922,8 @@ const AdminLeadsReport = () => {
         lead={editingLead}
         onUpdate={handleUpdateLead}
       />
+
+
     </div>
   );
 };

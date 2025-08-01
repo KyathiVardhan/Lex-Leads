@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 import addLeadsToSales from "./routes/add-leads-to-sales-route";
 import customLeadTypesRoutes from "./routes/custom-lead-types-route";
 
+
 dotenv.config();
 
 const app = express();
@@ -23,6 +24,7 @@ app.use('/api/admin', addSalesRoutes);
 app.use('/api/login-sales', salesAuthRoutes);
 app.use('/api/sales', addLeadsToSales);
 app.use('/api/sales', customLeadTypesRoutes);
+
 
 const PORT = process.env.PORT || 3001;
 

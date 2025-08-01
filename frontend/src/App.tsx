@@ -3,7 +3,7 @@ import './App.css'
 import LoginPage from './pages/LoginPage'
 import AdminDashboard from './pages/AdminDashboard'
 import SalesDashboard from './pages/SalesDashboard'
-import Viewreport from './components/Viewreport';
+import AdminReport from './components/AdminReport';
 import AddLeadForm from './components/AddLeadForm';
 import SalesPersonReport from './components/SalesPersonReport';
 
@@ -16,7 +16,7 @@ function App() {
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/sales/dashboard" element={<SalesDashboard />} />
       <Route path="/addlead" element={<AddLeadForm />} />
-      <Route path="/viewreport" element={<Viewreport />} />
+      <Route path="/viewreport" element={<AdminReport />} />
       <Route path="/salespersonreport" element={<SalesPersonReport />} />
       {/* <Route path="/about" element={<About />} /> */}
     </Routes>

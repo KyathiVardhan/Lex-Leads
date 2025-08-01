@@ -14,9 +14,11 @@ import {
   Edit,
   Save,
   X,
+
 } from "lucide-react";
 import API from "../api/axios";
 import EditLeadModal from "./EditLeadModal";
+
 
 // Lead data interface
 interface LeadData {
@@ -94,6 +96,8 @@ const SalesPersonReport = () => {
   const [showColumnMenu, setShowColumnMenu] = useState(false);
   const [editingLead, setEditingLead] = useState<LeadData | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+
 
   // Quick edit states
   const [quickEditingId, setQuickEditingId] = useState<string | null>(null);
@@ -176,6 +180,8 @@ const SalesPersonReport = () => {
     setEditingLead(lead);
     setIsEditModalOpen(true);
   };
+
+
 
   const handleUpdateLead = (updatedLead: LeadData) => {
     setLeads((prevLeads) =>
@@ -695,6 +701,7 @@ const SalesPersonReport = () => {
                                   <Edit size={12} />
                                   View Edit
                                 </button>
+
                               </>
                             )}
                           </div>
@@ -719,6 +726,8 @@ const SalesPersonReport = () => {
         lead={editingLead}
         onUpdate={handleUpdateLead}
       />
+
+
     </div>
   );
 };
